@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Management.Automation;
 using System.Text;
 using NLog;
@@ -16,12 +17,12 @@ namespace SlackReceiver.Web.Runners
 			Logger.Info($"Executing bot {context.BotName}, intent {context.Intent} for user {context.CallingUser}");
 			using (var ps = PowerShell.Create())
 			{
-				var script = File.ReadAllText($"{GlobalAppSettings.BaseBotDirectory}\\{context.BotName}\\{context.Intent}");
+				var script = File.ReadAllText($"{GlobalAppSettings.BaseBotDirectory}\\{context.BotName}\\{context.Intent}.ps1");
 
-				ps.AddScript(script).AddParameter("user", context.CallingUser);
-				ps.AddScript(script).AddParameter("token", context.BotToken);
-
-				var results = ps.Invoke();
+				var results = ps
+					.AddScript(script).AddParameters(
+						new Dictionary<string, string> {{"user", context.CallingUser}, {"token", context.BotToken}})
+					.Invoke();
 
 				var sb = new StringBuilder();
 				foreach (var result in results)
