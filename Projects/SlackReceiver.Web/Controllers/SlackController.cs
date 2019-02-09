@@ -28,7 +28,7 @@ namespace SlackReceiver.Web.Controllers
 
 			var context = message.CreateContext("slack");
 
-			var result = RunManager.Create().RunWithTimeout(_runner, context, new TimeSpan(0,0,0,0,1));
+			var result = RunManager.Create().RunWithTimeout(_runner, context, TimeSpan.FromSeconds(GlobalAppSettings.RunTimeoutInSeconds));
 
 			return Ok(DialogAction.Create("Close", "Fulfilled", result));
 		}
