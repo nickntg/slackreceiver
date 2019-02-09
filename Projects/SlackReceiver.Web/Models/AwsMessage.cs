@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SlackReceiver.Web.Models
 {
@@ -13,5 +14,30 @@ namespace SlackReceiver.Web.Models
 		public string outputDialogMode { get; set; }
 		public AwsIntent currentIntent { get; set; }
 		public string inputTranscript { get; set; }
+
+		public BotContext CreateContext(string botType)
+		{
+			var token = string.Empty;
+			var team = string.Empty;
+			var user = string.Empty;
+
+			switch (botType.ToLower())
+			{
+				case "slack":
+					token = requestAttributes["x-amz-lex:slack-bot-token"];
+					team = requestAttributes["x-amz-lex:slack-team-id"];
+					user = userId.Split(':', StringSplitOptions.None)[2];
+					break;
+			}
+
+			return new BotContext
+			{
+				BotName = bot.name,
+				BotToken = token,
+				Intent = currentIntent.name,
+				CallingTeam = team,
+				CallingUser = user
+			};
+		}
 	}
 }

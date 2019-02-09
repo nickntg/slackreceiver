@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SlackReceiver.Web.Runners;
+using SlackReceiver.Web.Runners.Interfaces;
 
 namespace SlackReceiver.Web
 {
@@ -18,6 +20,8 @@ namespace SlackReceiver.Web
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddScoped<IRunner, PowerShellRunner>();
+
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 		}
 
