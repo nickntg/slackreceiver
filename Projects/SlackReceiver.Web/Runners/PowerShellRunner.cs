@@ -12,18 +12,23 @@ namespace SlackReceiver.Web.Runners
 {
 	public class PowerShellRunner : IRunner
 	{
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private readonly Logger _logger;
+
+		public PowerShellRunner()
+		{
+			_logger = LogManager.GetCurrentClassLogger();
+		}
 
 		public string RunCommand(BotContext context)
 		{
-			Logger.Info($"Executing bot {context.BotName}, intent {context.Intent} for user {context.CallingUser}");
+			_logger.Info($"Executing bot {context.BotName}, intent {context.Intent} for user {context.CallingUser}");
 
 			using (var ps = PowerShell.Create())
 			{
 				var path = $"{GlobalAppSettings.BaseBotDirectory}\\{context.BotName}\\";
 				var randomFile = $"{path}{Guid.NewGuid()}.txt";
 
-				Logger.Info($"Temp file for output is {randomFile}");
+				_logger.Info($"Temp file for output is {randomFile}");
 
 				var script = File.ReadAllText($"{path}{context.Intent}.ps1");
 
@@ -32,7 +37,7 @@ namespace SlackReceiver.Web.Runners
 					.AddScript(script).AddParameters(new Dictionary<string, string> {{"user", context.CallingUser}, {"token", context.BotToken}, {"outfile", randomFile}})
 					.Invoke();
 
-				Logger.Info($"Will wait on file {randomFile}");
+				_logger.Info($"Will wait on file {randomFile}");
 
 				do
 				{
@@ -40,13 +45,28 @@ namespace SlackReceiver.Web.Runners
 				} while (!File.Exists(randomFile));
 
 				// Wait a bit in case WA still has the lock.
-				Thread.Sleep(50);
+				while (true)
+				{
+					Thread.Sleep(100);
+					try
+					{
+						using (new FileStream(randomFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+						{
+						}
 
-				Logger.Info($"Wait complete on {randomFile}");
+						break;
+					}
+					catch (Exception)
+					{
+						_logger.Info($"File {randomFile} still locked, waiting more");
+					}
+				}
+
+				_logger.Info($"Wait complete on {randomFile}");
 
 				var returned = File.ReadAllText(randomFile, Encoding.UTF8);
 
-				Logger.Info($"Deleting file {randomFile}");
+				_logger.Info($"Deleting file {randomFile}");
 
 				File.Delete(randomFile);
 
@@ -56,7 +76,7 @@ namespace SlackReceiver.Web.Runners
 					sb.AppendLine(result.ToString());
 				}
 
-				Logger.Info($"PS results: {sb}");
+				_logger.Info($"PS results: {sb}");
 
 				return returned;
 			}
