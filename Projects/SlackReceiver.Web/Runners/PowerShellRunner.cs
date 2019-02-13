@@ -30,6 +30,14 @@ namespace SlackReceiver.Web.Runners
 
 				_logger.Info($"Temp file for output is {randomFile}");
 
+				var scriptFile = $"{path}{context.Intent}.ps1";
+
+				if (!File.Exists(scriptFile))
+				{
+					_logger.Error($"No script file exists for intent {context.Intent}");
+					return "I understood what you wanted to do - unfortunately this integration is not yet ready on WinAutomation.";
+				}
+
 				var script = File.ReadAllText($"{path}{context.Intent}.ps1");
 
 				var results = 
