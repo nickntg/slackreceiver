@@ -8,7 +8,12 @@ namespace SlackReceiver.Web.Runners
 {
 	public class RunManager
 	{
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private readonly Logger _logger;
+
+		public RunManager()
+		{
+			_logger = LogManager.GetCurrentClassLogger();
+		}
 
 		public string RunWithTimeout(IRunner runner, BotContext context, TimeSpan timeout)
 		{
@@ -27,6 +32,7 @@ namespace SlackReceiver.Web.Runners
 
 				if (t.Status == TaskStatus.WaitingToRun || t.Status == TaskStatus.Running)
 				{
+					_logger.Error($"Timeout on bot {context.BotName}, intent {context.Intent}");
 					return "Unfortunately your request is taking longer than expected to fulfill. Please try to submit it again.";
 				}
 
@@ -34,7 +40,7 @@ namespace SlackReceiver.Web.Runners
 			}
 			catch (AggregateException e)
 			{
-				Logger.Error(e.InnerExceptions[0], $"Task failed, bot {context.BotName}, intent {context.Intent}");
+				_logger.Error(e.InnerExceptions[0], $"Task failed, bot {context.BotName}, intent {context.Intent}");
 				return "Unfortunately an internal error stopped me from fulfilling your request. Please contact your administrator about this.";
 			}
 		}
